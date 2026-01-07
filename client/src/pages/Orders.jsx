@@ -4,45 +4,26 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const Countdown = ({ createdAt, status }) => {
-    const [timeLeft, setTimeLeft] = useState('');
+const DeliveryInfo = ({ order }) => {
+    if (order.status === 'delivered') {
+        return (
+            <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', fontWeight: '700', color: '#4CAF50' }}>
+                Enjoy your meal!
+            </span>
+        );
+    }
 
-    useEffect(() => {
-        if (status === 'delivered') {
-            setTimeLeft('Arrived');
-            return;
-        }
-
-        const calculateTime = () => {
-            const created = new Date(createdAt).getTime();
-            // Default 30 min delivery time
-            const arrivalTime = created + 30 * 60000;
-            const now = new Date().getTime();
-            const diff = arrivalTime - now;
-
-            if (diff <= 0) {
-                setTimeLeft('Arriving soon...');
-            } else {
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                setTimeLeft(`${minutes}m ${seconds}s`);
-            }
-        };
-
-        const timer = setInterval(calculateTime, 1000);
-        calculateTime();
-
-        return () => clearInterval(timer);
-    }, [createdAt, status]);
+    if (order.estimatedDeliveryTime) {
+        return (
+            <span style={{ fontFamily: 'monospace', fontSize: '1.2rem', fontWeight: '700', color: 'var(--primary)' }}>
+                Arriving in: {order.estimatedDeliveryTime}
+            </span>
+        );
+    }
 
     return (
-        <span style={{
-            fontFamily: 'monospace',
-            fontSize: '1.2rem',
-            fontWeight: '700',
-            color: status === 'delivered' ? '#4CAF50' : 'var(--primary)'
-        }}>
-            {status === 'delivered' ? 'Enjoy your meal!' : `Arriving in: ${timeLeft}`}
+        <span style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--text-light)', fontStyle: 'italic' }}>
+            Waiting for restaurant update...
         </span>
     );
 };
@@ -159,7 +140,7 @@ const Orders = () => {
                                             background: 'rgba(255,255,255,0.03)',
                                             border: '1px solid rgba(255,255,255,0.1)'
                                         }}>
-                                            <Countdown createdAt={order.createdAt} status={order.status} />
+                                            <DeliveryInfo order={order} />
                                             <div style={{
                                                 padding: '4px 10px',
                                                 borderRadius: '4px',
