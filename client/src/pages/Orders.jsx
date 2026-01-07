@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import { FiTrash2 } from 'react-icons/fi';
+
 
 const DeliveryInfo = ({ order }) => {
     if (order.status === 'delivered') {
@@ -34,6 +36,8 @@ const Orders = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let socket;
+
         const fetchOrders = async () => {
             try {
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -46,14 +50,10 @@ const Orders = () => {
             }
         };
 
-        let socket;
-
         if (currentUser) {
             fetchOrders();
 
-            // Real-time connection
             const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            // Extract base URL if it has /api suffix
             const socketUrl = apiUrl.replace('/api', '');
 
             socket = io(socketUrl);
@@ -71,6 +71,19 @@ const Orders = () => {
             if (socket) socket.disconnect();
         };
     }, [currentUser]);
+
+    const handleDeleteOrder = async (orderId) => {
+        if (!window.confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+
+        try {
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+            await axios.delete(`${apiUrl}/orders/${orderId}`);
+            setOrders(prev => prev.filter(o => o._id !== orderId));
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete order. Please try again.");
+        }
+    };
 
     if (!currentUser) return <div className="container">Please log in to view orders.</div>;
 
@@ -189,6 +202,23 @@ const Orders = () => {
                                 <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
                                     <button className="btn btn-primary" style={{ fontSize: '0.9rem', padding: '0.6rem 1.2rem' }}>
                                         Reorder
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteOrder(order._id)}
+                                        className="btn"
+                                        style={{
+                                            fontSize: '0.9rem',
+                                            padding: '0.6rem 1.2rem',
+                                            background: 'rgba(244, 67, 54, 0.1)',
+                                            color: '#F44336',
+                                            border: '1px solid rgba(244, 67, 54, 0.2)',
+                                            marginLeft: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem'
+                                        }}
+                                    >
+                                        <FiTrash2 /> Delete
                                     </button>
                                 </div>
                             </div>

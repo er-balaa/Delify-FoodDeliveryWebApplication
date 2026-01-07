@@ -198,4 +198,18 @@ router.get('/vendor/:firebaseUid/dashboard', async (req, res) => {
     }
 });
 
+// Delete order
+router.delete('/:id', async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id);
+        if (!order) {
+            return res.status(404).json({ msg: 'Order not found' });
+        }
+        res.json({ msg: 'Order removed' });
+    } catch (err) {
+        console.error("Error deleting order:", err);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;
