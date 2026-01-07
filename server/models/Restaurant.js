@@ -4,7 +4,10 @@ const restaurantSchema = new mongoose.Schema({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: false,
+    },
+    ownerEmail: {
+        type: String, // Explicitly store owner email for validation
     },
     name: {
         type: String,

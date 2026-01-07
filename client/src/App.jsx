@@ -8,6 +8,7 @@ import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import VendorDashboard from './pages/VendorDashboard';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
@@ -58,6 +59,11 @@ function App() {
                 <Route path="/admin" element={
                   <PrivateRoute>
                     <AdminDashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/vendor-dashboard" element={
+                  <PrivateRoute>
+                    <VendorDashboard />
                   </PrivateRoute>
                 } />
               </Routes>

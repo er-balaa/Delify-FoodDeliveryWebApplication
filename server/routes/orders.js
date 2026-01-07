@@ -19,13 +19,17 @@ router.get('/admin/all', async (req, res) => {
     }
 });
 
-// Update order status (Admin)
+// Update order status/details (Admin/Vendor)
 router.put('/:id/status', async (req, res) => {
-    const { status } = req.body;
+    const { status, estimatedDeliveryTime } = req.body;
+    const updateFields = {};
+    if (status) updateFields.status = status;
+    if (estimatedDeliveryTime) updateFields.estimatedDeliveryTime = estimatedDeliveryTime;
+
     try {
         const order = await Order.findByIdAndUpdate(
             req.params.id,
-            { status },
+            updateFields,
             { new: true }
         ).populate('user', 'name email').populate('restaurant', 'name image');
 
@@ -84,6 +88,8 @@ router.post('/', async (req, res) => {
         // Notify Admins
         if (req.io) {
             req.io.emit('new_order_admin', order);
+            // Notify Specific Restaurant Vendor
+            req.io.to(restaurant).emit('new_vendor_order', order);
         }
 
         res.json(order);
@@ -139,6 +145,55 @@ router.get('/user/:firebaseUid', async (req, res) => {
         res.json(orders);
     } catch (err) {
         console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Vendor Dashboard Data
+router.get('/vendor/:firebaseUid/dashboard', async (req, res) => {
+    try {
+        const user = await User.findOne({ firebaseUid: req.params.firebaseUid });
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        // Find restaurant owned by this user (Validate by Email first as per requirements, then ID)
+        const restaurant = await require('../models/Restaurant').findOne({
+            $or: [
+                { ownerEmail: user.email },
+                { owner: user._id }
+            ]
+        });
+
+        if (!restaurant) {
+            return res.json({
+                restaurant: null,
+                orders: [],
+                stats: { totalOrders: 0, activeOrders: 0, completedOrders: 0, totalRevenue: 0 }
+            });
+        }
+
+        // Find orders for this restaurant
+        const orders = await Order.find({ restaurant: restaurant._id })
+            .sort({ createdAt: -1 })
+            .populate('user', 'name email')
+            .populate('items.menuItem', 'name price');
+
+        const stats = {
+            totalOrders: orders.length,
+            activeOrders: orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length,
+            completedOrders: orders.filter(o => o.status === 'delivered').length,
+            totalRevenue: orders
+                .filter(o => o.status !== 'cancelled')
+                .reduce((acc, curr) => acc + (curr.totalAmount || 0), 0)
+        };
+
+        res.json({
+            restaurant,
+            orders,
+            stats
+        });
+
+    } catch (err) {
+        console.error("Error in Vendor Dashboard:", err);
         res.status(500).send('Server Error');
     }
 });

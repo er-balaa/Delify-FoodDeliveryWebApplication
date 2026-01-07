@@ -2,17 +2,35 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
+import axios from 'axios';
+
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
+    const [dbUser, setDbUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
+            if (user) {
+                try {
+                    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                    const res = await axios.post(`${apiUrl}/auth/sync`, {
+                        firebaseUid: user.uid,
+                        email: user.email,
+                        name: user.displayName || 'User'
+                    });
+                    setDbUser(res.data);
+                } catch (error) {
+                    console.error("Failed to sync user with DB", error);
+                }
+            } else {
+                setDbUser(null);
+            }
             setLoading(false);
         });
 
@@ -21,6 +39,7 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         currentUser,
+        dbUser,
         loading
     };
 

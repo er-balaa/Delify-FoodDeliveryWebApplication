@@ -34,8 +34,11 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['placed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+        enum: ['placed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled', 'out_of_stock'],
         default: 'placed',
+    },
+    estimatedDeliveryTime: {
+        type: String, // Set by restaurant owner
     },
     deliveryAddress: {
         type: String,

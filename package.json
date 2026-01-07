@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
+        "prestart": "npx -y kill-port 5000 5173",
         "start": "npx concurrently \"npm run server\" \"npm run client\"",
         "server": "npm run dev --prefix server",
         "client": "npm run dev --prefix client",

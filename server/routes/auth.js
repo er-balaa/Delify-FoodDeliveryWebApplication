@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
+const Restaurant = require('../models/Restaurant');
+
 // Sync User from Firebase Login
 router.post('/sync', async (req, res) => {
     const { firebaseUid, email, name } = req.body;
@@ -16,6 +18,14 @@ router.post('/sync', async (req, res) => {
                 name,
                 role: email === 'delifyadmin@gmail.com' ? 'admin' : 'customer'
             });
+            await user.save();
+        }
+
+        // Auto-promote to restaurant_owner if email matches a restaurant
+        const ownedRestaurant = await Restaurant.findOne({ ownerEmail: email });
+        if (ownedRestaurant && user.role === 'customer') {
+            console.log(`Promoting user ${email} to restaurant_owner`);
+            user.role = 'restaurant_owner';
             await user.save();
         }
 

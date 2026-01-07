@@ -5,7 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { auth } from '../firebase';
 
 const Navbar = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, dbUser } = useAuth();
     const { cart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
@@ -40,7 +40,7 @@ const Navbar = () => {
                         <>
                             <Link to="/orders" className="btn-ghost" style={{ fontSize: '1.05rem', fontWeight: '500' }}>My Orders</Link>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                {currentUser.email === 'delifyadmin@gmail.com' && (
+                                {(dbUser?.role === 'admin' || currentUser.email === 'delifyadmin@gmail.com') && (
                                     <Link to="/admin" style={{ textDecoration: 'none' }}>
                                         <span style={{
                                             background: '#FFC107',
@@ -54,6 +54,24 @@ const Navbar = () => {
                                             cursor: 'pointer'
                                         }}>
                                             ADMIN DASHBOARD
+                                        </span>
+                                    </Link>
+                                )}
+
+                                {dbUser?.role === 'restaurant_owner' && (
+                                    <Link to="/vendor-dashboard" style={{ textDecoration: 'none' }}>
+                                        <span style={{
+                                            background: '#4CAF50',
+                                            color: 'white',
+                                            padding: '4px 10px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 'bold',
+                                            letterSpacing: '0.5px',
+                                            display: 'inline-block',
+                                            cursor: 'pointer'
+                                        }}>
+                                            OWNER DASHBOARD
                                         </span>
                                     </Link>
                                 )}

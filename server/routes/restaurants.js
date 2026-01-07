@@ -8,7 +8,7 @@ const User = require('../models/User');
 router.get('/', async (req, res) => {
     try {
         console.log("GET /api/restaurants called");
-        const restaurants = await Restaurant.find().populate('owner', 'name');
+        const restaurants = await Restaurant.find().populate('owner', 'name email');
         console.log(`Found ${restaurants.length} restaurants from DB`);
         res.json(restaurants);
     } catch (err) {
@@ -20,17 +20,34 @@ router.get('/', async (req, res) => {
 // Add new restaurant (Admin)
 router.post('/', async (req, res) => {
     try {
-        // Automatically assign to the admin user
-        let owner = await User.findOne({ email: 'delifyadmin@gmail.com' });
+        let ownerId = null;
 
-        // Fallback if admin user doesn't exist in DB (shouldn't happen if logged in)
-        if (!owner) {
-            owner = await User.findOne({}); // Just pick first user as fallback for safety
+        // If owner email provided, try to find that user
+        if (req.body.ownerEmail) {
+            const user = await User.findOne({ email: req.body.ownerEmail });
+            if (user) {
+                ownerId = user._id;
+                // Ideally, we should also update this user's role to 'restaurant_owner' if not already
+                if (user.role !== 'restaurant_owner' && user.role !== 'admin') {
+                    user.role = 'restaurant_owner';
+                    await user.save();
+                }
+            } else {
+                // Or return clear error validation if stricter
+                console.log("Owner email not found: " + req.body.ownerEmail);
+            }
+        }
+
+        // Fallback: Assign to admin if no email provided or not found (legacy behavior)
+        if (!ownerId) {
+            let admin = await User.findOne({ email: 'delifyadmin@gmail.com' });
+            if (!admin) admin = await User.findOne({});
+            ownerId = admin ? admin._id : null;
         }
 
         const newRestaurant = new Restaurant({
             ...req.body,
-            owner: owner ? owner._id : null
+            owner: ownerId
         });
 
         const restaurant = await newRestaurant.save();
@@ -47,13 +64,32 @@ router.put('/:id', async (req, res) => {
         console.log(`PUT /api/restaurants/${req.params.id} called`);
         console.log("Update Data:", req.body);
 
-        if (req.body.cuisine && typeof req.body.cuisine === 'string') {
-            req.body.cuisine = req.body.cuisine.split(',').map(c => c.trim());
+        const updateData = { ...req.body };
+
+        if (updateData.cuisine && typeof updateData.cuisine === 'string') {
+            updateData.cuisine = updateData.cuisine.split(',').map(c => c.trim());
+        }
+
+        // Handle Owner Update via Email
+        if (updateData.ownerEmail) {
+            // Always save the email string provided by Admin
+            // Look up user to link ID if they exist
+            const user = await User.findOne({ email: updateData.ownerEmail });
+            if (user) {
+                updateData.owner = user._id;
+                // Update role logic
+                if (user.role !== 'restaurant_owner' && user.role !== 'admin') {
+                    user.role = 'restaurant_owner';
+                    await user.save();
+                }
+            } else {
+                console.log(`Owner email '${updateData.ownerEmail}' provided but no user found. Email saved for future matching.`);
+            }
         }
 
         const updatedRestaurant = await Restaurant.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         );
 
@@ -99,6 +135,32 @@ router.post('/:id/menu', async (req, res) => {
         });
         const savedItem = await menuItem.save();
         res.json(savedItem);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Update menu item
+router.put('/menu/:itemId', async (req, res) => {
+    try {
+        const updatedMenuItem = await MenuItem.findByIdAndUpdate(
+            req.params.itemId,
+            req.body,
+            { new: true }
+        );
+        res.json(updatedMenuItem);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Delete menu item
+router.delete('/menu/:itemId', async (req, res) => {
+    try {
+        await MenuItem.findByIdAndDelete(req.params.itemId);
+        res.json({ msg: 'Menu item removed' });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

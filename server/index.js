@@ -37,8 +37,11 @@ app.use((req, res, next) => {
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+  .then(() => {
+    console.log('✅ MongoDB Connected Successfully');
+    console.log('📊 Database Host:', mongoose.connection.host); // Verifies Atlas connection
+  })
+  .catch(err => console.log('❌ MongoDB Connection Error:', err));
 
 // Routes
 // Routes
@@ -70,13 +73,32 @@ io.on('connection', (socket) => {
     console.log(`User ${userId} joined room`);
   });
 
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room ${room}`);
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
 });
 
 // Start Server
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start Server
+const startServer = () => {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  }).on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+      console.error(`\n❌ ERROR: Port ${PORT} is already in use!`);
+      console.error(`👉 You have another instance of the server running.`);
+      console.error(`   Please CLOSE other terminal windows or stop the process first.\n`);
+      process.exit(1);
+    } else {
+      console.error(e);
+    }
+  });
+};
+
+startServer();
 
