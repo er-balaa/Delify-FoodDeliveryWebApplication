@@ -5,6 +5,7 @@
     "scripts": {
         "prestart": "npx -y kill-port 5000 5173",
         "start": "npx concurrently \"npm run server\" \"npm run client\"",
+        "build": "npm install && npm install --prefix server && npm install --prefix client && npm run build --prefix client",
         "server": "npm run dev --prefix server",
         "client": "npm run dev --prefix client",
         "install-all": "npm install && npm install --prefix server && npm install --prefix client"
