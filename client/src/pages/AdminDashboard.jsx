@@ -491,8 +491,8 @@ const AdminDashboard = () => {
                             </div>
 
                             <motion.h3 variants={itemVariants} style={{ marginBottom: '1.5rem', fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)' }}>Recent Activity</motion.h3>
-                            <motion.div variants={itemVariants} className="glass" style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <motion.div variants={itemVariants} className="glass" style={{ borderRadius: '24px', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                             <th style={{ padding: '1.5rem', textAlign: 'left', fontWeight: '500' }}>Order ID</th>

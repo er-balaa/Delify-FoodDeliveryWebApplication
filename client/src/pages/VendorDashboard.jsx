@@ -221,7 +221,7 @@ const VendorDashboard = () => {
                     {showMenuForm && (
                         <div className="glass" style={{ padding: '2rem', borderRadius: '16px', marginBottom: '2rem', border: '1px solid rgba(255,255,255,0.1)' }}>
                             <h3 style={{ marginBottom: '1.5rem' }}>Add New Item</h3>
-                            <form onSubmit={handleMenuItemSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <form onSubmit={handleMenuItemSubmit} className="vendor-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                                 <div className="input-group">
                                     <label>Name</label>
                                     <input name="name" value={menuItemFormData.name} onChange={handleMenuItemInputChange} className="input-field" required />
@@ -230,7 +230,7 @@ const VendorDashboard = () => {
                                     <label>Price (₹)</label>
                                     <input name="price" type="number" value={menuItemFormData.price} onChange={handleMenuItemInputChange} className="input-field" required />
                                 </div>
-                                <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                                <div className="input-group full-width">
                                     <label>Description</label>
                                     <textarea name="description" value={menuItemFormData.description} onChange={handleMenuItemInputChange} className="input-field" rows="2" />
                                 </div>
@@ -250,7 +250,7 @@ const VendorDashboard = () => {
                                         <input type="checkbox" name="isBestseller" checked={menuItemFormData.isBestseller} onChange={handleMenuItemInputChange} /> Bestseller
                                     </label>
                                 </div>
-                                <div style={{ gridColumn: 'span 2' }}>
+                                <div className="full-width">
                                     <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Add Item</button>
                                 </div>
                             </form>
@@ -346,6 +346,14 @@ const VendorDashboard = () => {
                     </div>
                 </div>
             </div>
+            <style>{`
+                @media (max-width: 768px) {
+                    .vendor-form-grid { grid-template-columns: 1fr !important; }
+                    .full-width { grid-column: span 1 !important; }
+                    .container-fluid { padding-left: 1rem !important; padding-right: 1rem !important; }
+                }
+                .full-width { grid-column: span 2; }
+            `}</style>
         </div>
     );
 };
